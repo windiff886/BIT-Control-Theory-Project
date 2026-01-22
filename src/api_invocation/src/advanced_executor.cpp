@@ -30,7 +30,7 @@ public:
     sub_command_ = this->create_subscription<std_msgs::msg::String>(
       "navigation_command", 10, std::bind(&AdvancedExecutor::cmdCallback, this, std::placeholders::_1));
     
-    // 【弃用】既然 Gazebo Odom 是坏的，我们不再订阅它，改用自算
+    // Gazebo Odom 是坏的，暂时改用自算
     // sub_odom_ = ... 
     
     // 发布速度与机械臂
