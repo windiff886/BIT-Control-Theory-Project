@@ -420,6 +420,8 @@
         <max_velocity>${max_velocity}</max_velocity>
         <min_acceleration>-3.0</min_acceleration>
         <max_acceleration>3.0</max_acceleration>
+        <odom_topic>/odom</odom_topic>
+        <publish_odom>true</publish_odom>
         <odom_frame>odom</odom_frame>
         <robot_base_frame>body_link</robot_base_frame>
     </plugin>
@@ -428,15 +430,11 @@
             name="ignition::gazebo::systems::OdometryPublisher">
         <odom_frame>odom</odom_frame>
         <robot_base_frame>body_link</robot_base_frame>
-        <topic>/odom</topic>
-        <left_joint>rear_left_wheel_joint</left_joint>
-        <right_joint>rear_right_wheel_joint</right_joint>
+        <topic>odom</topic>
         <left_joint>front_left_wheel_joint</left_joint>
         <right_joint>front_right_wheel_joint</right_joint>
         <left_steering_joint>front_left_steering_joint</left_steering_joint>
         <right_steering_joint>front_right_steering_joint</right_steering_joint>
-
-
         <kingpin_width>${wheel_separation}</kingpin_width>
         <steering_limit>${max_steering_angle}</steering_limit>
         <wheel_base>${wheel_base}</wheel_base>
@@ -515,6 +513,10 @@
       </camera>
       <gz_frame_id>camera_link</gz_frame_id>
     </sensor>
+    <plugin name="gazebo_ros_camera" filename="libgazebo_ros_camera.so">
+      <ros_topic_name>/camera/image_raw</ros_topic_name>
+      <frame_name>camera_link</frame_name>
+      <update_rate>${camera_fps}</update_rate>
+    </plugin>
   </gazebo>
-
 </robot>

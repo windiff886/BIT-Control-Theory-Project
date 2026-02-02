@@ -28,10 +28,13 @@ public:
   {
     // 订阅指令
     sub_command_ = this->create_subscription<std_msgs::msg::String>(
-      "navigation_command", 10, std::bind(&AdvancedExecutor::cmdCallback, this, std::placeholders::_1));
+      "navigation_command", 10, 
+      std::bind(&AdvancedExecutor::cmdCallback, this, std::placeholders::_1));
     
-    // Gazebo Odom 是坏的，暂时改用自算
-    // sub_odom_ = ... 
+    // ✅ 订阅真实的 Odometry 话题
+    sub_odom_ = this->create_subscription<nav_msgs::msg::Odometry>(
+      "/odom", 10,
+      std::bind(&AdvancedExecutor::odomCallback, this, std::placeholders::_1));
     
     // 发布速度与机械臂
     pub_vel_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
@@ -40,13 +43,58 @@ public:
     // 控制循环 20Hz (50ms)
     timer_ = this->create_wall_timer(50ms, std::bind(&AdvancedExecutor::controlLoop, this));
 
-    last_time_ = this->now();
-    RCLCPP_INFO(this->get_logger(), "高级执行节点(自算Odom版)已启动");
+    RCLCPP_INFO(this->get_logger(), "高级执行节点(使用真实Odom + 防重复)已启动");
   }
 
 private:
+  // ✅ Odometry 回调函数
+  void odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
+  {
+    // 提取位置信息
+    current_x_ = msg->pose.pose.position.x;
+    current_y_ = msg->pose.pose.position.y;
+    
+    // 提取四元数并转换为欧拉角 (Yaw)
+    tf2::Quaternion q(
+      msg->pose.pose.orientation.x,
+      msg->pose.pose.orientation.y,
+      msg->pose.pose.orientation.z,
+      msg->pose.pose.orientation.w
+    );
+    
+    tf2::Matrix3x3 m(q);
+    double roll, pitch;
+    m.getRPY(roll, pitch, current_yaw_);
+    
+    // 提取速度信息
+    current_linear_vel_ = msg->twist.twist.linear.x;
+    current_angular_vel_ = msg->twist.twist.angular.z;
+    
+    odom_received_ = true;
+  }
+
   void cmdCallback(const std_msgs::msg::String::SharedPtr msg)
   {
+    // ✅ 防止重复任务: 检查是否与上次命令相同
+    std::string incoming_command = msg->data;
+    
+    if (incoming_command == last_command_) {
+      RCLCPP_WARN(this->get_logger(), "检测到重复指令，忽略 (若需重复执行，请先发送 'stop' 指令)");
+      return;
+    }
+    
+    // ✅ 如果正在执行任务，询问是否清空队列
+    if (has_active_task_ || !task_queue_.empty()) {
+      RCLCPP_WARN(this->get_logger(), 
+        "检测到新指令，但当前还有任务在执行！清空旧任务队列并执行新指令。");
+      task_queue_.clear();
+      has_active_task_ = false;
+      stopRobot();
+    }
+    
+    // 保存此次命令
+    last_command_ = incoming_command;
+
     Json::Value root;
     Json::CharReaderBuilder reader;
     std::string errs;
@@ -54,6 +102,7 @@ private:
 
     if (Json::parseFromStream(reader, stream, &root, &errs)) {
       if (root.isArray()) {
+        int task_count = 0;
         for (const auto& item : root) {
           Task task;
           task.action = item.get("action", "").asString();
@@ -64,31 +113,23 @@ private:
           task.y = item.get("y", 0.0).asDouble();
           task.command = item.get("command", "").asString();
           task_queue_.push_back(task);
+          task_count++;
         }
-        RCLCPP_INFO(this->get_logger(), "收到任务序列，当前待执行: %ld个", task_queue_.size());
+        RCLCPP_INFO(this->get_logger(), "收到新任务序列，共 %d 个任务", task_count);
       }
+    } else {
+      RCLCPP_ERROR(this->get_logger(), "JSON 解析失败: %s", errs.c_str());
     }
   }
 
   void controlLoop()
   {
-    // === 核心修改：手动计算里程计 (Dead Reckoning) ===
-    rclcpp::Time now = this->now();
-    double dt = (now - last_time_).seconds();
-    if (dt > 1.0) dt = 0.05; // 防止首帧跳变
-    last_time_ = now;
-
-    // 运动学积分：新位置 = 旧位置 + 速度 * 时间
-    // 假设是差速/阿克曼简化模型
-    current_yaw_ += last_angular_vel_ * dt;
-    // 归一化 Yaw
-    while (current_yaw_ > M_PI) current_yaw_ -= 2 * M_PI;
-    while (current_yaw_ < -M_PI) current_yaw_ += 2 * M_PI;
-
-    current_x_ += last_linear_vel_ * std::cos(current_yaw_) * dt;
-    current_y_ += last_linear_vel_ * std::sin(current_yaw_) * dt;
-
-    // ===================================================
+    // ✅ 检查是否收到 odometry 数据
+    if (!odom_received_) {
+      RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 2000, 
+                           "等待 odometry 数据...");
+      return;
+    }
 
     if (!has_active_task_) {
       if (!task_queue_.empty()) {
@@ -96,10 +137,14 @@ private:
         task_queue_.pop_front();
         has_active_task_ = true;
         task_start_time_ = this->now();
-        RCLCPP_INFO(this->get_logger(), "执行: %s", current_task_.action.c_str());
+        RCLCPP_INFO(this->get_logger(), "开始执行: %s", current_task_.action.c_str());
       } else {
-        // 空闲时要停车，并重置记录的速度
+        // ✅ 队列空闲时停车，并清空上次命令记录
         stopRobot();
+        if (!last_command_.empty()) {
+          RCLCPP_INFO(this->get_logger(), "所有任务执行完毕，等待新指令...");
+          last_command_.clear();  // 清空记录，允许下次相同指令
+        }
         return; 
       }
     }
@@ -112,6 +157,8 @@ private:
       stopRobot();
       task_queue_.clear();
       has_active_task_ = false;
+      last_command_.clear();  // 清空命令记录
+      RCLCPP_INFO(this->get_logger(), "已停止");
     }
   }
 
@@ -122,6 +169,7 @@ private:
       publishVelocity(current_task_.linear, current_task_.angular);
     } else {
       stopRobot();
+      RCLCPP_INFO(this->get_logger(), "✓ move_cmd 完成");
       has_active_task_ = false;
     }
   }
@@ -129,7 +177,7 @@ private:
   void executeWait()
   {
     if ((this->now() - task_start_time_).seconds() >= current_task_.duration) {
-      RCLCPP_INFO(this->get_logger(), "等待结束");
+      RCLCPP_INFO(this->get_logger(), "✓ 等待结束");
       has_active_task_ = false;
     }
   }
@@ -139,7 +187,7 @@ private:
     std_msgs::msg::String msg;
     msg.data = current_task_.command;
     pub_arm_->publish(msg);
-    RCLCPP_INFO(this->get_logger(), "机械臂: %s", current_task_.command.c_str());
+    RCLCPP_INFO(this->get_logger(), "✓ 机械臂: %s", current_task_.command.c_str());
     rclcpp::sleep_for(1s);
     has_active_task_ = false;
   }
@@ -153,13 +201,16 @@ private:
     // 调试日志 (每0.5秒打印一次)
     static int print_count = 0;
     if (print_count++ % 10 == 0) {
-        RCLCPP_INFO(this->get_logger(), "自算导航: 当前(%.2f, %.2f) Yaw:%.2f | 目标(%.2f, %.2f) Dist:%.2f",
-            current_x_, current_y_, current_yaw_, current_task_.x, current_task_.y, distance);
+        RCLCPP_INFO(this->get_logger(), 
+          "导航: 当前(%.2f, %.2f) Yaw:%.2f° | 目标(%.2f, %.2f) Dist:%.2f",
+          current_x_, current_y_, current_yaw_ * 180.0 / M_PI, 
+          current_task_.x, current_task_.y, distance);
     }
 
     if (distance < 0.3) { 
       stopRobot();
-      RCLCPP_INFO(this->get_logger(), "到达目标 (%.2f, %.2f)", current_task_.x, current_task_.y);
+      RCLCPP_INFO(this->get_logger(), "到达目标 (%.2f, %.2f)", 
+                  current_task_.x, current_task_.y);
       has_active_task_ = false;
       return;
     }
@@ -192,10 +243,6 @@ private:
     twist.linear.x = linear;
     twist.angular.z = angular;
     pub_vel_->publish(twist);
-    
-    // 关键：记录刚才发出的速度，用于下一次循环计算位置
-    last_linear_vel_ = linear;
-    last_angular_vel_ = angular;
   }
 
   void stopRobot()
@@ -204,6 +251,7 @@ private:
   }
 
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sub_command_;
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr sub_odom_;
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr pub_vel_;
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr pub_arm_;
   rclcpp::TimerBase::SharedPtr timer_;
@@ -213,15 +261,18 @@ private:
   bool has_active_task_ = false;
   rclcpp::Time task_start_time_;
 
-  // 状态变量
+  // 状态变量 (由 odometry 更新)
   double current_x_ = 0.0;
   double current_y_ = 0.0;
   double current_yaw_ = 0.0;
   
-  // 积分变量
-  double last_linear_vel_ = 0.0;
-  double last_angular_vel_ = 0.0;
-  rclcpp::Time last_time_;
+  double current_linear_vel_ = 0.0;
+  double current_angular_vel_ = 0.0;
+  
+  bool odom_received_ = false;
+  
+  // ✅ 新增: 记录上次命令，防止重复执行
+  std::string last_command_;
 };
 
 int main(int argc, char * argv[])

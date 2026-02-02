@@ -22,7 +22,7 @@
     camera_box_size: 0.05 # Size of the camera enclosure [m]
     camera_stick_size: 0.02 # Size of the camera stick [m]
     camera_height: 0.2 # Height of the camera above the body_link [m]
-    camera_pitch: 0.698131 # Pitch angle of the camera relative to body_link [rad]
+    camera_pitch: 0.0 # Pitch angle of the camera relative to body_link [rad]
     camera_fov: 1.3962634 # Field of view of the camera [rad]
     camera_fps: 30 # Frames per second for camera capture [Hz]
     image_width: 640 # Width of the camera's image output [pixels]
