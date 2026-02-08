@@ -8,7 +8,7 @@ from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
-    package_name = "gazebo_ackermann_steering_vehicle"
+    package_name = "ackermann_v2"
 
     vehicle_params_path = os.path.join(get_package_share_directory(package_name),
                                        'config', 'parameters.yaml')

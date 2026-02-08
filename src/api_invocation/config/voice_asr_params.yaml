@@ -1,0 +1,27 @@
+# 语音识别配置文件
+# 百度语音识别API申请地址: https://ai.baidu.com/tech/speech/asr
+
+/voice_input_asr_node:
+  ros__parameters:
+    # 百度语音识别API配置
+    # 1. 访问 https://console.bce.baidu.com/ai/#/ai/speech/app/list
+    # 2. 创建应用，获取 API Key 和 Secret Key
+    baidu_api_key: "tin8hXROJXo1j72lkPvIgYaO"      # 填写你的 API Key
+    baidu_secret_key: "lilXyJGMAKbBHpJxOn8aFEuuMFwT31Fp"   # 填写你的 Secret Key
+    
+    # 音频设备配置
+    # 使用 "arecord -l" 命令查看可用设备
+    # 常用设备名:
+    #   - "default"      : 默认设备
+    #   - "hw:0,0"       : 第一个声卡的第一个设备
+    #   - "plughw:0,0"   : 带自动转换的设备
+    audio_device: "default"
+    
+    # 采样率 (百度ASR支持 16000)
+    sample_rate: 16000
+    
+    # 录音时长 (秒)
+    record_seconds: 5
+    
+    # 静音检测阈值 (未使用，保留)
+    silence_threshold: 500.0

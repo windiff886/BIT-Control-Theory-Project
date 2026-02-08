@@ -418,30 +418,15 @@
         <wheel_radius>${wheel_radius}</wheel_radius>
         <min_velocity>-${max_velocity}</min_velocity>
         <max_velocity>${max_velocity}</max_velocity>
-        <min_acceleration>-3.0</min_acceleration>
-        <max_acceleration>3.0</max_acceleration>
-        <odom_topic>/odom</odom_topic>
-        <publish_odom>true</publish_odom>
-        <odom_frame>odom</odom_frame>
-        <robot_base_frame>body_link</robot_base_frame>
-    </plugin>
-
-    <plugin filename="libignition-gazebo-odometry-publisher-system.so"
-            name="ignition::gazebo::systems::OdometryPublisher">
-        <odom_frame>odom</odom_frame>
-        <robot_base_frame>body_link</robot_base_frame>
-        <topic>odom</topic>
-        <left_joint>front_left_wheel_joint</left_joint>
-        <right_joint>front_right_wheel_joint</right_joint>
-        <left_steering_joint>front_left_steering_joint</left_steering_joint>
-        <right_steering_joint>front_right_steering_joint</right_steering_joint>
-        <kingpin_width>${wheel_separation}</kingpin_width>
-        <steering_limit>${max_steering_angle}</steering_limit>
-        <wheel_base>${wheel_base}</wheel_base>
-        <publish_tf>true</publish_tf>
+        <min_acceleration>-1.5</min_acceleration>
+        <max_acceleration>1.5</max_acceleration>
+        
+        <!-- ✅ 启用 AckermannSteering 插件的里程计（它知道阿克曼运动学） -->
         <odom_publish_frequency>60</odom_publish_frequency>
-        <tf_topic>/tf</tf_topic>
-        <publish_rate>30</publish_rate>
+        <odom_topic>/model/ackermann_steering_vehicle/odometry</odom_topic>
+        <!-- <tf_topic>/tf</tf_topic> 禁用此插件的TF，避免与 OdometryPublisher 冲突 -->
+        <frame_id>odom</frame_id>
+        <child_frame_id>body_link</child_frame_id>
     </plugin>
 
     <plugin name="ignition::gazebo::systems::JointStatePublisher"
@@ -449,10 +434,31 @@
         <topic>/joint_states</topic>
         <update_rate>60</update_rate>
     </plugin>
+    
+    <!-- ✅ 使用后轮差速里程计（基于实际轮子旋转，更准确） -->
+    <plugin filename="libignition-gazebo-odometry-publisher-system.so"
+            name="ignition::gazebo::systems::OdometryPublisher">
+        <odom_frame>odom</odom_frame>
+        <robot_base_frame>body_link</robot_base_frame>
+        <odom_topic>/model/ackermann_steering_vehicle/odometry_wheels</odom_topic>
+        <tf_topic>/tf</tf_topic>
+        <odom_publish_frequency>60</odom_publish_frequency>
+        <dimensions>2</dimensions>
+    </plugin>
 
     <plugin filename="libignition-gazebo-sensors-system.so"
             name="ignition::gazebo::systems::Sensors">
         <render_engine>ogre2</render_engine>
+    </plugin>
+    
+    <!-- ✅ 发布模型的 ground truth 位姿（绝对准确，无漂移） -->
+    <plugin filename="libignition-gazebo-pose-publisher-system.so"
+            name="ignition::gazebo::systems::PosePublisher">
+        <publish_link_pose>false</publish_link_pose>
+        <publish_collision_pose>false</publish_collision_pose>
+        <publish_visual_pose>false</publish_visual_pose>
+        <publish_nested_model_pose>false</publish_nested_model_pose>
+        <update_frequency>60</update_frequency>
     </plugin>
   </gazebo>
 
