@@ -1,311 +1,430 @@
-# BIT-Control-Theory-Project
-# BIT-Control-Theory-Project
+# LLM_ackermann_robot
 
 <div align="center">
 
-**基于ROS2的阿克曼结构智能车自然语言控制系统**
+**🤖 基于大语言模型的阿克曼机器人自然语言导航系统**
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![ROS2](https://img.shields.io/badge/ROS2-Humble-green.svg)](https://docs.ros.org/en/humble/)
-[![Language](https://img.shields.io/badge/C%2B%2B-69.4%25-orange.svg)]()
-[![Language](https://img.shields.io/badge/Python-16.1%25-blue.svg)]()
+*LLM-Powered Natural Language Navigation for Ackermann Steering Robot*
+
+[![ROS 2](https://img.shields.io/badge/ROS-2-blue.svg)](https://docs.ros.org/en/humble/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
+[![Gazebo](https://img.shields.io/badge/Gazebo-Simulation-orange.svg)](https://gazebosim.org/)
 
 </div>
 
-## 📖 项目简介
+---
 
-本项目是北京理工大学控制理论课程项目，实现了一个基于ROS2的阿克曼结构智能车控制系统，支持通过**自然语言指令**控制机器人的移动和导航。系统集成了大语言模型(LLM)API，可以将中文自然语言指令解析为结构化的控制命令，并在Gazebo仿真环境中执行。
+## 📖 项目简介 | Overview
 
-### ✨ 核心特性
+本项目实现了一个基于大语言模型（LLM）的智能机器人导航系统，能够理解自然语言指令并控制阿克曼转向机器人在 Gazebo 仿真环境中完成复杂的导航任务。
 
-- 🤖 **阿克曼结构车辆仿真**:  基于Gazebo的真实物理仿真环境
-- 🗣️ **自然语言控制**: 支持中文自然语言指令解析和执行
-- 🧠 **LLM集成**: 集成DeepSeek/ChatGPT等大语言模型API
-- 🎮 **手柄控制**: 支持通过游戏手柄进行实时控制
-- 🎯 **多级执行器**: 提供简单和高级两种任务执行模式
-- 📊 **轨迹可视化**: Python工具用于轨迹验证和可视化
+**核心特性：**
+- 🗣️ **自然语言交互**：支持中文语音/文本指令输入
+- 🧠 **LLM 驱动**：使用 GPT/DeepSeek 等大模型进行指令解析
+- 🚗 **阿克曼转向**：真实车辆物理模型，支持四轮转向约束
+- 🏠 **语义导航**：理解"去茶几前面"、"走到两个球中间"等语义指令
+- 🎯 **坐标导航**：支持精确坐标点导航
+- 🔄 **复合任务**：支持多步骤任务序列执行
+- 🎨 **轨迹绘制**：支持绘制曲线（如正弦曲线）
+- 📷 **视觉反馈**：实时RGB图像可视化
 
 ---
 
-## 🏗️ 系统架构
+## 🎬 演示效果 | Demo
 
-```
-BIT-Control-Theory-Project/
-├── src/
-│   ├── ackermann_v2/          # 阿克曼车辆模型与仿真
-│   │   ├── launch/            # ROS2启动文件
-│   │   ├── model/             # URDF/Xacro车辆模型
-│   │   ├── config/            # 参数配置文件
-│   │   ├── rviz/              # RViz可视化配置
-│   │   └── src/               # 手柄控制器源码
-│   │
-│   └── api_invocation/        # LLM API调用与任务执行
-│       ├── src/
-│       │   ├── llm_analyze.cpp        # LLM API调用节点
-│       │   ├── test_publisher.cpp     # 测试发布节点
-│       │   ├── simple_executor.cpp    # 简单任务执行器
-│       │   ├── advanced_executor.cpp  # 高级任务执行器
-│       │   └── plot_point.py          # 轨迹可视化工具
-│       └── config/
-│           └── llm_config.yaml        # LLM配置与Prompt
-│
-├── llm_params. yaml            # LLM参数配置
-└── README. md
+### 支持的指令示例
 
+```bash
+# 坐标导航
+"去坐标(2,2)"
+"走到(1.5,3.0)"
+
+# 语义导航
+"去茶几前面"
+"走到两个球中间"
+"去卧室的床边"
+
+# 基础移动
+"向前走3秒"
+"左转90度"
+"后退2米"
+
+# 复合任务
+"去坐标(2,2)，然后抬起机械臂"
+"先去厨房，再去卧室"
+
+# 轨迹绘制
+"画一条sinx曲线，等待3s后返回"
+
+# 相对移动
+"朝左前方30度方向前进2m"
+
+# 控制指令
+"停止"
+"等待5秒"
 ```
 
 ---
 
-## 🚀 快速开始
+## 🏗️ 系统架构 | Architecture
 
-### 📋 依赖环境
-
-- **操作系统**: Ubuntu 22.04 (推荐)
-- **ROS2**: Humble Hawksbill
-- **Gazebo**:  Gazebo Classic 或 Gazebo Ignition
-- **C++标准**: C++17
-- **Python**: Python 3.10+
-
-### 📦 依赖库
-
-```bash
-# ROS2核心依赖
-sudo apt install ros-humble-rclcpp ros-humble-std-msgs ros-humble-geometry-msgs 
-sudo apt install ros-humble-nav-msgs ros-humble-tf2 ros-humble-tf2-geometry-msgs
-
-# Gazebo与仿真
-sudo apt install ros-humble-gazebo-ros-pkgs
-
-# 手柄控制
-sudo apt install ros-humble-joy
-
-# C++库
-sudo apt install libcurl4-openssl-dev libjsoncpp-dev
-
-# Python依赖
-pip3 install matplotlib numpy
+```mermaid
+graph LR
+    A[自然语言输入] --> B[LLM分析器<br/>llm_analyze]
+    B --> C[导航命令<br/>JSON格式]
+    C --> D[任务执行器<br/>advanced_executor]
+    D --> E[机器人控制]
+    F[Gazebo仿真] --> G[模型状态发布器]
+    G --> B
+    H[语音识别<br/>可选] --> A
+    I[RGB摄像头] --> J[图像查看器<br/>image_viewer] --> B
 ```
 
-### ⚙️ 编译项目
+### 核心模块
+
+| 模块 | 功能 | 文件 |
+|------|------|------|
+| **LLM 分析器** | 将自然语言转换为结构化导航指令 | `api_invocation/src/llm_analyze.cpp` |
+| **任务执行器** | 执行导航任务，控制机器人运动 | `api_invocation/src/advanced_executor.cpp` |
+| **模型状态发布器** | 从 Gazebo 获取环境物体位置 | `api_invocation/src/model_state_publisher.cpp` |
+| **坐标转换** | 将 /odom 话题转换为 TF | `api_invocation/src/odom_to_tf.cpp` |
+| **语音输入** | 终端交互式语音命令输入 | `api_invocation/src/voice_input.cpp` |
+| **图像查看器** | 可视化机器人摄像头RGB图像 | `api_invocation/src/image_viewer.cpp` |
+
+---
+
+## 🛠️ 环境要求 | Requirements
+
+### 软件依赖
+
+- **操作系统**：Ubuntu 22.04 LTS
+- **ROS 版本**：ROS 2 Humble
+- **仿真器**：Gazebo Classic / Gazebo Fortress
+- **编译工具**：CMake 3.8+, GCC/Clang with C++17
+
+### 依赖库
 
 ```bash
-# 克隆仓库
-git clone https://github.com/windiff886/BIT-Control-Theory-Project.git
-cd BIT-Control-Theory-Project
+# ROS 2 基础包
+ros-humble-desktop
+ros-humble-gazebo-ros-pkgs
+ros-humble-ros2-control
+ros-humble-joint-state-publisher
+ros-humble-robot-state-publisher
+ros-humble-xacro
 
-# 编译
-colcon build
+# 额外依赖
+libcurl4-openssl-dev
+libjsoncpp-dev
+libopencv-dev
+python3-matplotlib
+python3-numpy
 
-# 加载环境变量
+# 语音识别（可选）
+python3-pyaudio
+```
+
+### API 配置
+
+需要配置 LLM API 密钥（支持 OpenAI、DeepSeek 等兼容 API）：
+
+编辑 `api_invocation/config/llm_params.yaml`：
+
+```yaml
+/llm_analyzer:
+  ros__parameters:
+    api_key: "your-api-key-here"
+    api_url: "https://api.openai.com/v1/chat/completions"
+    model: "gpt-3.5-turbo"  # 或 "deepseek-chat" 等
+```
+
+---
+
+## 📦 安装步骤 | Installation
+
+### 1. 创建工作空间
+
+```bash
+mkdir -p ~/ackermann_ws/src
+cd ~/ackermann_ws/src
+```
+
+### 2. 克隆仓库
+
+```bash
+git clone https://github.com/unionfleet1208-beep/LLM_ackermann_robot.git
+cd ~/ackermann_ws
+```
+
+### 3. 安装依赖
+
+```bash
+# 安装 ROS 2 依赖
+rosdep install --from-paths src --ignore-src -r -y
+
+# 安装系统依赖
+sudo apt-get update
+sudo apt-get install -y \
+    libcurl4-openssl-dev \
+    libjsoncpp-dev \
+    libopencv-dev \
+    python3-matplotlib \
+    python3-numpy
+```
+
+### 4. 编译
+
+```bash
+cd ~/ackermann_ws
+colcon build --symlink-install
 source install/setup.bash
 ```
 
 ---
 
-## 🎯 使用指南
+## 🚀 快速开始 | Quick Start
 
-### 1️⃣ 启动仿真环境
+### 方式一：完整���统启动（推荐）
+
+#### 步骤 1：启动 Gazebo 仿真环境
 
 ```bash
-# 启动Gazebo仿真环境和阿克曼车辆
-ros2 launch ackermann_v2 vehicle.launch.py
-
-# 可选参数: 
-# - world:  指定世界文件 (默认: empty. sdf)
-# - x, y, z: 初始位置坐标
-# - R, P, Y: 初始姿态 (roll, pitch, yaw)
+# 终端 1
+source ~/ackermann_ws/install/setup.bash
+ros2 launch api_invocation gazebo_simulation.launch.py
 ```
 
-### 2️⃣ 手柄控制模式
+#### 步骤 2：启动 LLM 导航系统
 
 ```bash
-# 启动手柄控制
-ros2 launch ackermann_v2 joystick.launch.py
-
-# 手柄操作: 
-# - 左摇杆横向: 控制转向角度
-# - 右摇杆纵向: 控制车辆速度
+# 终端 2
+source ~/ackermann_ws/install/setup.bash
+ros2 launch api_invocation llm_navigation.launch.py
 ```
 
-### 3️⃣ 自然语言控制模式
-
-#### 启动LLM解析器
+#### 步骤 3：发送自然语言指令
 
 ```bash
-# 启动LLM自然语言解析节点
-ros2 run api_invocation llm_analyze --ros-args \
-  --params-file src/api_invocation/config/llm_config.yaml
+# 终端 3：使用交互式输入
+source ~/ackermann_ws/install/setup.bash
+ros2 run api_invocation voice_input
+
+# 或直接通过话题发布
+ros2 topic pub --once /voice_command std_msgs/msg/String "{data: '去茶几前面'}"
 ```
 
-#### 启动任务执行器
+#### 步骤 4：启动图像查看器（可选）
 
 ```bash
-# 简单执行器 (开环控制)
-ros2 run api_invocation simple_executor
+# 终端 4：实时查看机器人摄像头画面
+source ~/ackermann_ws/install/setup.bash
+ros2 run api_invocation image_viewer
+```
 
-# 或者使用高级执行器 (支持闭环导航)
+### 方式二：手动逐个启动（调试用）
+
+```bash
+# 终端 1：Gazebo 仿真
+ros2 launch api_invocation gazebo_simulation.launch.py
+
+# 终端 2：模型状态发布器
+ros2 run api_invocation model_state_publisher
+
+# 终端 3：LLM 分析器
+ros2 run api_invocation llm_analyze --ros-args --params-file src/api_invocation/config/llm_params.yaml
+
+# 终端 4：任务执行器
 ros2 run api_invocation advanced_executor
-```
 
-#### 发送自然语言指令
+# 终端 5：语音输入
+ros2 run api_invocation voice_input
 
-```bash
-# 方式1: 使用测试发布器
-ros2 run api_invocation test_publisher
-
-# 方式2: 手动发布指令
-ros2 topic pub /voice_command std_msgs/msg/String \
-  "data: '向前走2米然后左转'"
+# 终端 6：图像查看器（可选）
+ros2 run api_invocation image_viewer
 ```
 
 ---
 
-## 📝 支持的指令类型
+## 🧪 测试示例 | Examples
 
-系统支持以下几种类型的自然语言指令: 
-
-| 指令类型 | Action | 参数 | 示例 |
-|---------|--------|------|------|
-| **基础移动** | `move_cmd` | `linear`, `angular`, `duration` | "向前走3秒"<br>"左转2秒" |
-| **坐标导航** | `move_to` | `x`, `y` | "去坐标(2,2)"<br>"移动到原点" |
-| **机械臂控制** | `control_arm` | `command` (lift/lower) | "抬起机械臂"<br>"放下机械臂" |
-| **等待** | `wait` | `duration` | "等待5秒" |
-| **停止** | `stop` | - | "停止" |
-
-### 🎨 复杂指令示例
+### 示例 1：基础坐标导航
 
 ```bash
-# 复合任务
-"去坐标(2,2)，然后抬起机械臂"
-
-# 曲线绘制
-"画一条sinx曲线，等待3s后返回"
-
-# 相对移动
-"朝左前方沿与朝向30度方向前进2m"
-
-# 连续动作
-"前进5米然后左转90度"
+ros2 topic pub --once /voice_command std_msgs/msg/String "{data: '去坐标(2,3)'}"
 ```
 
----
-
-## ⚙️ 配置说明
-
-### LLM API配置
-
-编辑 `src/api_invocation/config/llm_config.yaml`:
-
-```yaml
-llm_analyzer:
-  ros__parameters:
-    # 使用DeepSeek API (推荐)
-    api_key: "your-api-key-here"
-    api_url: "https://api.deepseek.com/chat/completions"
-    model:  "deepseek-chat"
-    
-    # 或使用ChatGPT
-    # api_url: "https://api.openai.com/v1/chat/completions"
-    # model:  "gpt-4"
-    
-    temperature: 0.7
-    max_tokens: 2000
-    system_prompt: "你的系统提示词..."
-```
-
-### 重要约束
-
-由于本车采用**阿克曼结构**,有以下物理限制:
-
-1. ❌ **无法原地旋转** - 车辆必须有线速度才能转向
-2. ✅ 任何转向指令必须同时包含非零线速度
-3. ✅ 如果用户只说"左转",系统会自动设置默认线速度(0.5 m/s)
-
----
-
-## 🔧 开发与调试
-
-### 📊 可视化轨迹
+### 示例 2：语义导航
 
 ```bash
-# 运行轨迹绘制工具
-cd src/api_invocation/src
+ros2 topic pub --once /voice_command std_msgs/msg/String "{data: '走到两个红球中间'}"
+```
+
+### 示例 3：复合任务
+
+```bash
+ros2 topic pub --once /voice_command std_msgs/msg/String "{data: '先去茶几，等待5秒，然后去卧室'}"
+```
+
+### 示例 4：绘制正弦曲线
+
+```bash
+ros2 topic pub --once /voice_command std_msgs/msg/String "{data: '画一条sinx曲线'}"
+```
+
+### 示例 5：RGB 图像可视化
+
+```bash
+# 启动图像查看器，实时显示机器人摄像头画面
+ros2 run api_invocation image_viewer
+```
+
+**功能说明：**
+- 📷 实时显示机器人搭载的 RGB 摄像头图像
+- 🔍 支持视觉检查和调试
+- ✅ 可用于语义导航中的物体识别验证
+- 🖼️ 使用 OpenCV 窗口显示，支持实时刷新
+
+**订阅话题：**
+- `/camera/image_raw` 或 `/camera/rgb/image_raw` (根据配置)
+
+### 可视化轨迹点
+
+```bash
+cd ~/ackermann_ws/src/LLM_ackermann_robot/api_invocation/src
 python3 plot_point.py
 ```
 
-该工具可以帮助你:
-- 验证生成的轨迹坐标
-- 可视化机器人的运动路径
-- 调试复杂的运动规划
+---
 
-### 🛠️ 调试技巧
+## 📐 环境地图 | Environment Map
 
-1. **Prompt调优**:  系统效果主要依赖于LLM的Prompt设计,如果解析结果不符合预期,请调整 `llm_config.yaml` 中的 `system_prompt`
+仿真场景包含以下区域和物体：
 
-2. **查看日志**:
-```bash
-ros2 run api_invocation llm_analyze --ros-args \
-  --params-file config/llm_config.yaml --log-level DEBUG
+```
+客厅区（Living Room）:
+  - 茶几 (Coffee Table): (1.0, 1.5)
+  - 沙发 (Sofa): (2.0, 3.0)
+  - 红色球1-3 (Balls): 散布在各处
+
+卧室区（Bedroom）:
+  - 床 (Bed): (-4.0, 2.0)
+  - 衣柜 (Wardrobe): (-5.0, 1.0)
+  - 床头柜 (Nightstand): (-3.5, 2.5)
+
+厨房区（Kitchen）:
+  - 冰箱 (Refrigerator): (6.0, 1.0)
+  - 橱柜 (Cabinet): (7.0, 2.0)
+
+重要：区域间有墙壁阻隔，必须通过门口绕行！
+  - 客厅↔卧室门口: (-2.0, -0.5)
+  - 客厅↔厨房通道: (5.0, 1.0)
 ```
 
-3. **测试单个指令**:  修改 `test_publisher.cpp` 中的 `test_commands_` 数组来测试特定指令
+---
+
+## 🔧 配置文件 | Configuration
+
+### LLM API 配置
+
+**文件：** `api_invocation/config/llm_params.yaml`
+
+```yaml
+/llm_analyzer:
+  ros__parameters:
+    api_key: "your-api-key"
+    api_url: "https://api.openai.com/v1/chat/completions"
+    model: "gpt-3.5-turbo"
+    temperature: 0.1
+    max_tokens: 2000
+    system_prompt: |
+      你是一个阿克曼结构智能车的导航与任务规划专家。
+      请将用户的自然语言指令解析为 JSON 任务列表。
+      ...（详细提示词见配置文件）
+```
+
+### 语音识别配置（可选）
+
+**文件：** `api_invocation/config/voice_asr_params.yaml`
+
+```yaml
+/voice_input_asr_node:
+  ros__parameters:
+    baidu_api_key: "your-baidu-api-key"
+    baidu_secret_key: "your-baidu-secret-key"
+    audio_device: "default"
+    sample_rate: 16000
+```
 
 ---
 
-## 📂 ROS2话题
+## 📊 语言组成 | Language Breakdown
 
-### 订阅话题
-
-| 话题名 | 类型 | 描述 |
-|-------|------|------|
-| `/voice_command` | `std_msgs/msg/String` | 自然语言指令输入 |
-| `/joy` | `sensor_msgs/msg/Joy` | 手柄输入 |
-
-### 发布话题
-
-| 话题名 | 类型 | 描述 |
-|-------|------|------|
-| `/navigation_command` | `std_msgs/msg/String` | LLM解析后的JSON任务列表 |
-| `/cmd_vel` | `geometry_msgs/msg/Twist` | 速度控制指令 |
-| `/desired_steering_angle` | `std_msgs/msg/Float64` | 期望转向角度 |
-| `/desired_velocity` | `std_msgs/msg/Float64` | 期望速度 |
+| 语言 | 占比 | 用途 |
+|------|------|------|
+| **C++** | 83.1% | 核心导航算法、ROS 2 节点 |
+| **Python** | 8.2% | 可视化工具、启动脚本 |
+| **CMake** | 5.1% | 编译配置 |
+| **Dockerfile** | 2.4% | 容器化部署 |
+| **Shell** | 1.2% | 构建和运行脚本 |
 
 ---
 
-## 🤝 贡献指南
+## 🐳 Docker 部署（可选）
 
-欢迎提交Issue和Pull Request! 
+### 构建镜像
 
-1. Fork本仓库
-2. 创建你的特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交你的更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 打开一个Pull Request
+```bash
+cd ~/ackermann_ws/src/LLM_ackermann_robot/ackermann_v2
+./build_docker.sh
+```
 
----
+### 运行容器
 
-## 📄 许可证
-
-本项目基于 MIT License 开源 - 详见 [LICENSE](LICENSE) 文件
-
----
-
-## 🙏 致谢
-
-- ROS2社区
-- DeepSeek & OpenAI
+```bash
+./run_docker.sh
+```
 
 ---
 
-## 📧 联系方式
+## 📝 开发说明 | Development Notes
 
-- 维护者: windiff886
-- 项目链接: [https://github.com/windiff886/BIT-Control-Theory-Project](https://github.com/windiff886/BIT-Control-Theory-Project)
+### 重要物理约束
+
+⚠️ **阿克曼结构特性**：
+- 无法原地旋转（类似真实汽车）
+- 任何转弯指令必须同时包含线速度和角速度
+- 严禁 `linear=0, angular≠0` 的组合
+
+### 提示词（Prompt）配置
+
+- 提示词配置位于 `api_invocation/config/llm_params.yaml` 的 `system_prompt` 字段。
+
+### 推荐 LLM
+
+- **DeepSeek Chat**：速度快，效果好（作者当前使用）
+- **GPT-5.2**：效果最佳，但可能超时（网络不稳定时）
+
+### 视觉功能
+
+- **图像查看器** (`image_viewer`)：实时显示机器人视角的 RGB 图像
+- 支持的图像话题：`/camera/image_raw`, `/camera/rgb/image_raw`
+- 使用 OpenCV 进行图像处理和显示
+- 可用于调试语义导航和物体识别功能
+
+
+
+## 📚 相关资源 | Resources
+
+- [ROS 2 Documentation](https://docs.ros.org/en/humble/)
+- [Gazebo Simulation](https://gazebosim.org/)
+- [OpenAI API Documentation](https://platform.openai.com/docs/api-reference)
+- [DeepSeek API](https://www.deepseek.com/)
+
 
 ---
 
 <div align="center">
 
-**⭐ 如果这个项目对你有帮助,请给我们一个Star!  ⭐**
+**Built with BIT using ROS 2 and LLM**
 
 </div>
