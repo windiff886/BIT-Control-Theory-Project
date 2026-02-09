@@ -21,6 +21,7 @@
 *.so
 *.dylib
 *.dll
+*.pyc
 
 # Fortran module files
 *.mod
@@ -39,3 +40,8 @@
 
 # debug information files
 *.dwo
+data/
+chamferdist_temp/
+habitat-lab/
+habitat-sim/
+gradslam_temp/
