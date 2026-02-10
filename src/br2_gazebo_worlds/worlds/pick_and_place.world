@@ -1,0 +1,247 @@
+<?xml version="1.0" ?>
+<sdf version="1.4">
+  <world name="default">
+    <physics name="5ms" type="ignored">
+        <max_step_size>0.005</max_step_size>
+        <real_time_factor>1.0</real_time_factor>
+    </physics>
+    <plugin
+      filename="gz-sim-physics-system"
+      name="gz::sim::systems::Physics">
+    </plugin>
+    <plugin
+      filename="gz-sim-user-commands-system"
+      name="gz::sim::systems::UserCommands">
+    </plugin>
+    <plugin
+      filename="gz-sim-scene-broadcaster-system"
+      name="gz::sim::systems::SceneBroadcaster">
+    </plugin>
+    <plugin
+      filename="gz-sim-sensors-system"
+      name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <plugin
+      filename="gz-sim-imu-system"
+      name="gz::sim::systems::Imu">
+    </plugin>
+    <!-- A global light source -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    <!-- A ground plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <model name='PickWall'>
+    <static>true</static>
+    <include>
+        <uri>model://aws_robomaker_residential_RoomWall_01</uri>
+    </include>
+    <pose>5 0 0 0 0 -1.571733</pose>
+    </model>
+
+    <model name='PickBin_ARUco30'>
+    <static>true</static>
+    <include>
+    <uri>model://aruco_tag_30</uri>
+    </include>
+    <pose>-4.94 -2.1 1.4 0 1.571733 0</pose>
+    </model>
+
+    <model name='PickBin_ARUco40'>
+    <static>true</static>
+    <include>
+    <uri>model://aruco_tag_40</uri>
+    </include>
+    <pose>-4.94 -1.55 1.4 0 1.571733 0</pose>
+    </model>
+
+    <model name='PickBin_ARUco50'>
+    <static>true</static>
+    <include>
+    <uri>model://aruco_tag_50</uri>
+    </include>
+    <pose>-4.94 -1.05 1.4 0 1.571733 0</pose>
+    </model>
+
+    <model name='PickBin_ARUco100'>
+    <static>true</static>
+    <include>
+    <uri>model://aruco_tag_100</uri>
+    </include>
+    <pose>-4.94 1.0 1.4 0 1.571733 0</pose>
+    </model>
+
+    <model name='PickBin_ARUco110 '>
+    <static>true</static>
+    <include>
+    <uri>model://aruco_tag_110</uri>
+    </include>
+    <pose>-5.06 1.0 1.0 0 -1.571733 0</pose>
+    </model>
+
+    <model name='PickTableInnerLeft'>
+          <static>true</static>    
+          <include>
+              <uri>model://aws_robomaker_residential_KitchenTable_01</uri>
+          </include>
+          <pose>4.5 -1 0 0 0 0</pose>
+    </model>
+
+    <model name='PickTableInnerRight'>
+          <static>true</static>    
+          <include>
+              <uri>model://aws_robomaker_residential_KitchenTable_01</uri>
+          </include>
+          <pose>4.5 1 0 0 0 0</pose>
+    </model>
+
+    <model name='RedCokeCan1'>
+    <static>false</static>    
+    <include>
+      <uri>model://movable_coke_can</uri>
+    </include>
+    <pose>4.3 -1.5 1.5 0 0 0</pose>
+    </model>
+
+    <model name='GreenCokeCan1'>
+    <static>false</static>    
+    <include>
+      <uri>model://movable_coke_can_green</uri>
+    </include>
+    <pose>4.25 -1.2 1.5 0 0 0</pose>
+    </model>
+
+    <model name='GreenCokeCan2'>
+    <static>false</static>    
+    <include>
+      <uri>model://movable_coke_can_green</uri>
+    </include>
+    <pose>4.3 -0.9 1.5 0 0 0</pose>
+    </model>
+
+    <model name='RedCokeCan2'>
+    <static>false</static>    
+    <include>
+      <uri>model://movable_coke_can</uri>
+    </include>
+    <pose>4.25 -0.6 1.0 0 0 0</pose>
+    </model>
+
+    <model name='PickTableOuter'>
+          <static>true</static>    
+          <include>
+              <uri>model://aws_robomaker_residential_KitchenTable_01</uri>
+          </include>
+          <pose>5.5 0 0 0 0 0</pose>
+    </model>
+
+    <model name='SideWallA'>
+    <static>true</static>
+    <include>
+        <uri>model://aws_robomaker_residential_RoomWall_01</uri>
+    </include>
+    <pose>-2.5 5 0 0 0 0</pose>
+    </model>
+
+    <model name='SideWallA_NonPickable_Shelf'>
+    <static>true</static>
+    <include>
+        <uri>model://shelf_aruco</uri>
+    </include>
+    <pose>0 4.5 0 0 0 0</pose>
+    </model>
+
+    <model name='SideWallB'>
+    <static>true</static>
+    <include>
+        <uri>model://aws_robomaker_residential_RoomWall_01</uri>
+    </include>
+    <pose>-2.5 -4 0 0 0 0</pose>
+    </model>
+
+    <model name='PlaceWall'>
+    <static>true</static>
+    <include>
+        <uri>model://aws_robomaker_residential_RoomWall_01</uri>
+    </include>
+    <pose>-5 0 0 0 0 -1.571733</pose>
+    </model>
+
+    <model name='PlaceTableInner'>
+          <static>true</static>    
+          <include>
+              <uri>model://aws_robomaker_residential_KitchenTable_01</uri>
+          </include>
+          <pose>-4.5 1.0 0 0 0 0</pose>
+    </model>
+
+    <model name='PlaceBinA'>
+    <static>true</static>    
+    <include>
+    <uri>model://TrashBin</uri>
+    </include>
+    <pose>-4.8 -2 0 0 0 0</pose>
+    </model>
+
+    <model name='PlaceBinB'>
+    <static>true</static>    
+    <include>
+    <uri>model://TrashBin</uri>
+    </include>
+    <pose>-4.8 -1.5 0 0 0 0</pose>
+    </model>
+
+    <model name='PlaceBinC'>
+    <static>true</static>    
+    <include>
+    <uri>model://TrashBin</uri>
+    </include>
+    <pose>-4.8 -1.0 0 0 0 0</pose>
+    </model>
+
+    <model name='PlaceTableOuter'>
+          <static>true</static>    
+          <include>
+              <uri>model://aws_robomaker_residential_KitchenTable_01</uri>
+          </include>
+          <pose>-5.5 1.0 0 0 0 0</pose>
+    </model>
+
+	<model name='ArucoCube60'>
+	<static>false</static>    
+	<include>
+		<uri>model://aruco_cube_60</uri>
+	</include>
+    <pose>4.25 0.5 0.9 0 0 -1.571733</pose>
+	</model>
+
+	<model name='ArucoCube80'>
+	<static>false</static>    
+	<include>
+		<uri>model://aruco_cube_80</uri>
+	</include>
+    <pose>4.25 0.8 0.9 0 0 -1.571733</pose>
+	</model>
+
+	<model name='Cube1'>
+	<static>false</static>    
+	<include>
+		<uri>model://cube_1</uri>
+	</include>
+    <pose>4.25 1.2 0.9 0 0 -1.571733</pose>
+	</model>
+
+	<model name='Cube2'>
+	<static>false</static>    
+	<include>
+		<uri>model://cube_2</uri>
+	</include>
+    <pose>4.25 1.5 0.9 0 0 -1.571733</pose>
+	</model>
+
+  </world>
+</sdf>
